@@ -1,158 +1,259 @@
-create table EMPLOYEE(SSN char(5) primary key, Fname varchar(15),
-Lname varchar(15), Address varchar(15), Sex char(1), Salary decimal(8,2),
-SuperSSN char(5), Dno int);
+PROGRAM 5.
 
-create table DEPARTMENT(Dno int primary key, Dname varchar(10),
-MgrSSN char(5), MgrStartDate date);
+.................Step 1: Create project name as ‘ student_registration’
+django-admin startproject student_registration...................
 
-create table DLOCATION(Dno int, Dloc varchar(15), primary key(Dno,
-Dloc));
+................Step 2: Step 1: Create project name as ‘courses’
+py manage.py startapp courses...............
 
-create table PROJECT(Pno int(5) primary key, Pname varchar(15),
-Plocation varchar(15), Dno int);
+...................Step 3: Edit the file models.py in application ‘courses’
+models.py (courses)................
 
-create table WORKS_ON(SSN char(5), Pno int(5), Hours int(2), primary
-key(SSN, Pno));
+from django.db import models
+class Student(models.Model):
+  first_name = models.CharField(max_length=50)
+  last_name = models.CharField(max_length=50)
+  email = models.EmailField(unique=True)
+  def __str__(self):
+    return f'{self.first_name} {self.last_name}'
+class Course(models.Model):
+  name = models.CharField(max_length=100)
+  description = models.TextField()
+  def __str__(self):
+    return self.name
+class Enrollment(models.Model):
+  student = models.ForeignKey(Student, on_delete=models.CASCADE)
+  course = models.ForeignKey(Course, on_delete=models.CASCADE)
+  enrolled_at = models.DateTimeField(auto_now_add=True)
+  class Meta:
+    unique_together = ('student', 'course')
+  def __str__(self):
+    return f'{self.student} enrolled in {self.course}'
 
+................Step 4: Edit the file forms.py in application ‘courses’
+forms.py (courses)................
 
-................altering....................
+from django import forms
+from .models import Student, Course, Enrollment
+class StudentForm(forms.ModelForm):
+  class Meta:
+    model = Student
+    fields = ['first_name', 'last_name', 'email']
+class CourseForm(forms.ModelForm):
+  class Meta:
+    model = Course
+    fields = ['name', 'description']
+class EnrollmentForm(forms.ModelForm):
+  student = forms.ModelChoiceField(queryset=Student.objects.all(),
+empty_label="Select Student", widget=forms.Select(attrs={'class': 'form-
+control'}))
 
-alter table EMPLOYEE add constraint FKsuperssn foreign key(SuperSSN)
-references EMPLOYEE(SSN);
+  class Meta:
+    model = Enrollment
+    fields = ['student']
 
-alter table EMPLOYEE add constraint FKdnumber foreign key(Dno) references
-DEPARTMENT(Dno);
+..............Step 5: Edit the file views.py in application ‘courses’
+views.py (courses)..............
 
-alter table DEPARTMENT add constraint FKMgrSSN foreign key(MgrSSN)
-references EMPLOYEE(SSN);
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import Student, Course, Enrollment
+from .forms import StudentForm, CourseForm, EnrollmentForm
+def course_list(request):
+  courses = Course.objects.all()
+  return render(request, 'courses/course_list.html', {'courses': courses})
+def student_list(request, course_id):
+  course = get_object_or_404(Course, id=course_id)
+  enrollments = Enrollment.objects.filter(course=course)
+  return render(request, 'courses/student_list.html', {'course': course,
+'enrollments': enrollments})
 
-alter table DLOCATION add constraint FKLocation foreign key(Dno) references
-DEPARTMENT(Dno);
+def enroll_student(request, course_id):
+  course = get_object_or_404(Course, id=course_id)
+  if request.method == 'POST':
+    form = EnrollmentForm(request.POST)
+    if form.is_valid():
+      enrollment = form.save(commit=False)
+      enrollment.course = course
+      enrollment.save()
+      return redirect('student_list', course_id=course.id)
+  else:
+    form = EnrollmentForm()
+  return render(request, 'courses/enroll_student.html', {'course': course,
+'form': form})
 
-alter table PROJECT add constraint FKProjDept foreign key(Dno) references
-DEPARTMENT(Dno);
+def add_student(request):
+  if request.method == 'POST':
+    form = StudentForm(request.POST)
+    if form.is_valid():
+      form.save()
+      return redirect('course_list')
+  else:
+    form = StudentForm()
+  return render(request, 'courses/add_student.html', {'form': form})
 
-alter table WORKS_ON add constraint FKWorksProj foreign key(Pno)
-references PROJECT(Pno);
+def add_course(request):
+  if request.method == 'POST':
+    form = CourseForm(request.POST)
+    if form.is_valid():
+      form.save()
+      return redirect('course_list')
+  else:
+    form = CourseForm()
+  return render(request, 'courses/add_course.html', {'form': form})
 
-alter table WORKS_ON add constraint FKWorksEmp foreign key(SSN)
-references EMPLOYEE(SSN);
+...........Step 6: create folder called templates in application ‘courses’ and inside template folder
+create another folder called courses. [courses/templates/courses]..............
 
+..........7. courses/templates/courses/course_list.html ( create course_list.html file inside courses
+folder).............
 
-.............insert into EMPLOYEE values..............
+<!DOCTYPE html>
+<html>
+<head>
+<title>Course List</title>
+</head>
+<body>
+<h1>Course List</h1>
+<ul>
+{% for course in courses %}
+<li><a href="{% url 'student_list' course.id %}">{{ course.name
 
-insert into EMPLOYEE values
+}}</a></li>
+{% endfor %}
+</ul>
+<a href="{% url 'add_course' %}">Add a new course</a><br>
+<a href="{% url 'add_student' %}">Add a new student</a>
+</body>
+</html>
 
-('CEC01','John','Scott','Dallas,Houston','M',850000,NULL,NULL),
-('CEC02','James','Borg','Voss,Houston','M',770000,NULL,NULL),
-('CEC03','Alicia','Zeleya','Castie, Spring','F',780000,NULL,NULL),
-('CEC04','Ramesh','Narayan','Banglore','M',800000,NULL,NULL),
-('CEC05','Reena','Sharma','Mumbai','F‘,580000,NULL,NULL),
-('CEC06','Aditya','Roy','Jaipur','M',850000,NULL,NULL);
+...............8. courses/templates/courses/student_list.html( create student_list.html file inside courses
+folder)...............
 
+<!DOCTYPE html>
+<html>
+<head>
+<title>{{ course.name }} - Student List</title>
+</head>
+<body>
+<h1>Students Enrolled in {{ course.name }}</h1>
+<ul>
+{% for enrollment in enrollments %}
+<li>{{ enrollment.student }}</li>
+{% endfor %}
+</ul>
+<a href="{% url 'enroll_student' course.id %}">Enroll a new
+student</a><br>
+<a href="{% url 'course_list' %}">Back to Course List</a>
+</body>
+</html>
 
-..............insert into department values................
+...................9. courses/templates/courses/enroll_student.html( create enroll_student.html file inside
+courses folder)...............
 
-insert into department values
+<!DOCTYPE html>
+<html>
+<head>
+<title>Enroll Student in {{ course.name }}</title>
+</head>
+<body>
+<h1>Enroll Student in {{ course.name }}</h1>
+<form method="post">
+{% csrf_token %}
+{{ form.as_p }}
+<button type="submit">Enroll</button>
+</form>
+<a href="{% url 'student_list' course.id %}">Back to Student List</a>
+</body>
+</html>
 
-(1, 'AppDev', 'CEC01', '2000-06-01'),
-(2, 'Accounts', 'CEC04', '2000-05-25'),
-(3, 'Robotics', 'CEC06', '2015-02-05'),
-(4, 'Testing', 'CEC01', '2000-05-25'),
-(5, 'ES', 'CEC06', '2014-11-25');
+...............10. courses/templates/courses/add_student.html( create add_student.html file inside
+courses folder)................
 
-...........Assign dept number to employee............
+<!DOCTYPE html>
+<html>
+<head>
+<title>Add Student</title>
+</head>
+<body>
+<h1>Add Student</h1>
+<form method="post">
+{% csrf_token %}
+{{ form.as_p }}
+<button type="submit">Add Student</button>
+</form>
+<a href="{% url 'course_list' %}">Back to Course List</a>
+</body>
+</html>
 
-update EMPLOYEE set Dno=1 where SSN='CEC01';
-update EMPLOYEE set Dno=3 where SSN='CEC02';
-update EMPLOYEE set Dno=4 where SSN='CEC03';
-update EMPLOYEE set Dno=2 where SSN='CEC04';
-update EMPLOYEE set Dno=5 where SSN='CEC05';
-update EMPLOYEE set Dno=3 where SSN='CEC06';
+....................11. courses/templates/courses/add_course.html( create add_course.html file inside courses
+folder)...............
 
+<!DOCTYPE html>
+<html>
+<head>
+<title>Add Course</title>
+</head>
+<body>
+<h1>Add Course</h1>
+<form method="post">
+{% csrf_token %}
+{{ form.as_p }}
+<button type="submit">Add Course</button>
+</form>
+<a href="{% url 'course_list' %}">Back to Course List</a>
+</body>
+</html>
 
-............Assign Supervisors to employee...........
-update EMPLOYEE set SuperSSN='CEC06' where SSN='CEC01';
-update EMPLOYEE set SuperSSN='CEC01' where SSN='CEC03';
-update EMPLOYEE set SuperSSN='CEC05' where SSN='CEC02';
-update EMPLOYEE set SuperSSN='CEC06' where SSN='CEC05';
+..............12. urls.py (courses)...............
 
+from django.urls import path
+from . import views
+urlpatterns = [
+  path('', views.course_list, name='course_list'),
+  path('course/<int:course_id>/', views.student_list, name='student_list'),
+  path('course/<int:course_id>/enroll/', views.enroll_student,
+name='enroll_student'),
+  path('add_student/', views.add_student, name='add_student'),
+  path('add_course/', views.add_course, name='add_course'),
+]
 
+................13. urls.py (student_registration)..................
 
-.............insert into DLOCATION values..............
+from django.contrib import admin
+from django.urls import include, path
+urlpatterns = [
+  path('admin/', admin.site.urls),
+  path('courses/', include('courses.urls')),
+]
 
-insert into DLOCATION values
+..................14.settings.py (student_registration)...............
 
-(1, 'Texas'),
-(2, 'Mumbai'),
-(3, 'New Jersey'),
-(3, 'Jaipur'),
-(4, 'Bangalore'),
-(5, 'New Jersey');
+from pathlib import Path
+import os
 
-..............insert into PROJECT values............
+import os
+INSTALLED_APPS = [
+  'django.contrib.admin',
+  'django.contrib.auth',
+  'django.contrib.contenttypes',
+  'django.contrib.sessions',
+  'django.contrib.messages',
+'django.contrib.staticfiles',
+'courses',
+]
 
-insert into PROJECT values
-(111, 'IOT', 'Bangalore', 1),
-(222, 'INSAT', 'Jaipur', 5),
-(333, 'UDAN', 'Jaipur', 5),
-(444, 'MetalDetector', 'Texas', 3),
-(555, 'WarFeildSpying', 'Texas', 3);
-
-
-...............insert into WORKS_ON values...............
-
-insert into WORKS_ON values
-('CEC01', 111, 30),
-('CEC02', 222, 15),
-('CEC02', 333, 15),
-('CEC03', 444, 12),
-('CEC03', 555, 18),
-('CEC05', 333, 20),
-('CEC05', 555, 10),
-('CEC06', 222, 10),
-('CEC06', 444, 20),
-('CEC01', 555, 10);
-
-
-
-1.
-(select Pno from Project P, Department D, Employee E
-where P.Dno = D.Dno and D.MgrSSN=E.SSN and E.Lname='Scott')
-union
-(select Pno
-from works_on W, employee E
-where W.SSN = E.SSN and E.Lname='Scott');
-
-2.
-select e. Fname, e.Salary, 1.1*e. Salary Inc_Salary
-from employee e, project p, works_on w
-where e.SSN=w.SSN and p. Pno=w.Pno and p. Pname='IOT';
-
-3.
-select Dname, sum (Salary) TOT_SAL, MAX(Salary) MAX_SAL,
-MIN(Salary) MIN_SAL, AVG(Salary) AVG_SAL
-from employee natural join department
-where Dname='Accounts';
-
-4.
-SELECT E.FNAME
-FROM EMPLOYEE E
-WHERE NOT EXISTS (SELECT P. PNO
-FROM PROJECT P
-WHERE P. DNO=5 AND
-P.PNO NOT IN (SELECT W.PNO
-FROM WORKS_ON W
-WHERE E.SSN=W.SSN));
-
-5.
-SELECT DNO, COUNT(*)
-FROM EMPLOYEE
-WHERE
-DNO IN (SELECT DNO
-FROM EMPLOYEE
-GROUP BY DNO
-HAVING COUNT(*)>1)
-AND
-SALARY>600000
-GROUP BY DNO;
+TEMPLATES = [
+{
+  'BACKEND': 'django.template.backends.django.DjangoTemplates',
+  'DIRS': [os.path.join(BASE_DIR, 'templates')],
+  'APP_DIRS': True,
+  'OPTIONS': {
+    'context_processors': [
+      'django.template.context_processors.debug',
+      'django.template.context_processors.request',
+      'django.contrib.auth.context_processors.auth',
+      'django.contrib.messages.context_processors.messages',
+      ],
+    },
+  },
+]
