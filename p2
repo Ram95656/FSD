@@ -1,58 +1,57 @@
 PROGRAM 2.
 
-* Step 1: Create a project with name programs
-django-admin startproject programs
+............Step 1: Create a project with name programs
+django-admin startproject programs...............
 
-* Step2: Create an Application inside the project with name app2
-py manage.py startapp app2
+................. Step2: Create an Application inside the project with name app2
+py manage.py startapp app2..............
 
-* Step3: Edit the views.py in Application ‘app2’
-views.py (app2)
+............Step3: Edit the views.py in Application ‘app2’
+views.py (app2)...............
 
->>>from django.shortcuts import render
+from django.shortcuts import render
 from django.http import HttpResponse
 from datetime import datetime,timedelta
 
 def datetime_offsets(request):
-now=datetime.now()
-offset_hours=4
-#calculate dates with offset
-four_hour_ahead=now+timedelta(hours=offset_hours)
-four_hour_before=now-timedelta(hours=offset_hours)
-html=f"<html><body><h1>Current datetime with offsets:</h1>"\
-f"<p>Current:{now}</p>"\
-f"<p>Four Hours Ahead:{four_hour_ahead}</p>"\
-f"<p>Four Hour Before:{four_hour_before}</p></body></html>"
-return HttpResponse(html)
+  now=datetime.now()
+  offset_hours=4
+  four_hour_ahead=now+timedelta(hours=offset_hours)
+  four_hour_before=now-timedelta(hours=offset_hours)
+  html=f"<html><body><h1>Current datetime with offsets:</h1>"\
+    f"<p>Current:{now}</p>"\
+    f"<p>Four Hours Ahead:{four_hour_ahead}</p>"\
+    f"<p>Four Hour Before:{four_hour_before}</p></body></html>"
+  return HttpResponse(html)
 
-* Step 4: Add a new file named ‘urls.py’ in app2
-urls.py(app2 -> Application name)
+................ Step 4: Add a new file named ‘urls.py’ in app2
+urls.py(app2 -> Application name)................
 
->>>from django.urlsimport path
+from django.urlsimport path
 from . import views
 urlpatterns=[
-path('datetime_offsets/',views.datetime_offsets,name='datetime_offsets')
+  path('datetime_offsets/',views.datetime_offsets,name='datetime_offsets')
 ]
 
-* Step 5: Edit the file ‘urls.py’ in project.
-urls.py(programs-> Projectname)
+.....................Step 5: Edit the file ‘urls.py’ in project.
+urls.py(programs-> Projectname).................
 
->>>from django.contrib import admin
+from django.contrib import admin
 from django.urlsimport path,include
 urlpatterns = [
-path('admin/', admin.site.urls),
-path('',include('app2.urls')),
+  path('admin/', admin.site.urls),
+  path('',include('app2.urls')),
 ]
 
-* Step 6: Edit the settings.py for configuration in project.
-settings.py ((programs-> Projectname)
+...............Step 6: Edit the settings.py for configuration in project.
+settings.py ((programs-> Projectname)...............
 
->>>INSTALLED_APPS = [
-'django.contrib.admin',
-'django.contrib.auth',
-'django.contrib.contenttypes',
-'django.contrib.sessions',
-'django.contrib.messages',
-'django.contrib.staticfiles',
-'app2',
+INSTALLED_APPS = [
+  'django.contrib.admin',
+  'django.contrib.auth',
+  'django.contrib.contenttypes',
+  'django.contrib.sessions',
+  'django.contrib.messages',
+  'django.contrib.staticfiles',
+  'app2',
 ]
