@@ -1,65 +1,58 @@
-CREATE TABLE SALESMAN
-(SALESMAN_ID NUMBER (4),
-NAME VARCHAR2 (20),
-CITY VARCHAR2 (20),
-COMMISSION VARCHAR2 (20),
-PRIMARY KEY (SALESMAN_ID));
+PROGRAM 2.
 
-CREATE TABLE CUSTOMER
-(CUSTOMER_ID NUMBER (4),
-CUST_NAME VARCHAR2 (20),
-CITY VARCHAR2 (20), GRADE NUMBER (3),
-PRIMARY KEY (CUSTOMER_ID), SALESMAN_ID INTEGER,
-FOREIGN KEY(SALESMAN_ID) REFERENCES SALESMAN (SALESMAN_ID) ON DELETE SET
-NULL);
+* Step 1: Create a project with name programs
+django-admin startproject programs
 
-CREATE TABLE ORDERS
-(ORD_NO NUMBER (5),
-PURCHASE_AMT NUMBER (10, 2),
-ORD_DATE DATE,
-PRIMARY KEY
-(ORD_NO),CUSTOMER_ID INTEGER,
-FOREIGN KEY(CUSTOMER_ID) REFERENCES CUSTOMER (CUSTOMER_ID) ON
-DELETE CASCADE, SALESMAN_ID INTEGER,
-FOREIGN KEY(SALESMAN_ID) REFERENCES SALESMAN (SALESMAN_ID) ON
-DELETE CASCADE);
+* Step2: Create an Application inside the project with name app2
+py manage.py startapp app2
 
-1.
-SELECT GRADE, COUNT (DISTINCT CUSTOMER_ID)
-FROM CUSTOMER
-GROUP BY GRADE
-HAVING GRADE > (SELECT AVG(GRADE)
-FROM CUSTOMER1
-WHERE CITY='BANGALORE');
+* Step3: Edit the views.py in Application ‘app2’
+views.py (app2)
 
-2.
-SELECT SALESMAN_ID, NAME
-FROM SALESMAN A
-WHERE 1 < (SELECT COUNT (*)
-FROM CUSTOMER
-WHERE SALESMAN_ID=A.SALESMAN_ID);
+>>>from django.shortcuts import render
+from django.http import HttpResponse
+from datetime import datetime,timedelta
 
-3.
-SELECT SALESMAN.SALESMAN_ID, NAME, CUST_NAME, COMMISSION
-FROM SALESMAN, CUSTOMER
-WHERE SALESMAN.CITY = CUSTOMER.CITY
-UNION
-SELECT SALESMAN_ID, NAME, 'NO MATCH', COMMISSION
-FROM SALESMAN
-WHERE NOT CITY = ANY
-(SELECT CITY
-FROM CUSTOMER)
-ORDER BY 2 DESC;
+def datetime_offsets(request):
+now=datetime.now()
+offset_hours=4
+#calculate dates with offset
+four_hour_ahead=now+timedelta(hours=offset_hours)
+four_hour_before=now-timedelta(hours=offset_hours)
+html=f"<html><body><h1>Current datetime with offsets:</h1>"\
+f"<p>Current:{now}</p>"\
+f"<p>Four Hours Ahead:{four_hour_ahead}</p>"\
+f"<p>Four Hour Before:{four_hour_before}</p></body></html>"
+return HttpResponse(html)
 
-4.
-CREATE VIEW ELITSALESMAN AS
-SELECT B.ORD_DATE, A.SALESMAN_ID, A.NAME
-FROM SALESMAN A, ORDERS B
-WHERE A.SALESMAN_ID = B.SALESMAN_ID
-AND B.PURCHASE_AMT=(SELECT MAX (PURCHASE_AMT)
-FROM ORDERS C
-WHERE C.ORD_DATE = B.ORD_DATE);
+* Step 4: Add a new file named ‘urls.py’ in app2
+urls.py(app2 -> Application name)
 
-5.
-DELETE FROM SALESMAN
-WHERE SALESMAN_ID=1000
+>>>from django.urlsimport path
+from . import views
+urlpatterns=[
+path('datetime_offsets/',views.datetime_offsets,name='datetime_offsets')
+]
+
+* Step 5: Edit the file ‘urls.py’ in project.
+urls.py(programs-> Projectname)
+
+>>>from django.contrib import admin
+from django.urlsimport path,include
+urlpatterns = [
+path('admin/', admin.site.urls),
+path('',include('app2.urls')),
+]
+
+* Step 6: Edit the settings.py for configuration in project.
+settings.py ((programs-> Projectname)
+
+>>>INSTALLED_APPS = [
+'django.contrib.admin',
+'django.contrib.auth',
+'django.contrib.contenttypes',
+'django.contrib.sessions',
+'django.contrib.messages',
+'django.contrib.staticfiles',
+'app2',
+]
