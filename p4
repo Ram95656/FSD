@@ -1,84 +1,111 @@
-CREATE TABLE STUDENT (
-USN VARCHAR (10) PRIMARY KEY,
-SNAME VARCHAR (25),
-ADDRESS VARCHAR (25),
-PHONE INTEGER,
-GENDER CHAR (1));
+PORGRAM 4.  
 
-CREATE TABLE SEMSEC (
-SSID VARCHAR (5) PRIMARY KEY,
-SEM INTEGER,
-SEC CHAR (1));
+..............Step 1: Create a project with name programs
+django-admin startproject programs..............
 
-CREATE TABLE CLASS (
-USN VARCHAR (10),
-SSID VARCHAR (5),
-PRIMARY KEY (USN, SSID),
-FOREIGN KEY (USN) REFERENCES STUDENT (USN),
-FOREIGN KEY (SSID) REFERENCES SEMSEC(SSID));
+.................Step2: Create an Application inside the project with name app4
+py manage.py startapp app4..............
 
-CREATE TABLE SUBJECT (
-SUBCODE VARCHAR (8),
-TITLE VARCHAR (20),
-SEM NUMBER (2),
-CREDITS INTEGER,
-PRIMARY KEY (SUBCODE));
+.............Step3: Edit the views.py in Application ‘app4’
+views.py (app4)...............
 
-CREATE TABLE IAMARKS (
-USN VARCHAR (10),
-SUBCODE VARCHAR (8),
-SSID VARCHAR (5),
-TEST1 INTEGER,
-TEST2 INTEGER,
-TEST3 INTEGER,
-FINALIA INTEGER,
-PRIMARY KEY (USN, SUBCODE, SSID),
-FOREIGN KEY (USN) REFERENCES STUDENT (USN),
-FOREIGN KEY (SUBCODE) REFERENCES SUBJECT (SUBCODE),
-FOREIGN KEY (SSID) REFERENCES SEMSEC (SSID));
+from django.shortcuts import render
+from django.http import HttpResponse
+def home(request):
+  return render(request,'home.html')
+def about_us(request):
+  return render(request,'about_us.html')
+def contact_us(request):
+  return render(request,'contact_us.html')
 
-1.
-SELECT S.*, SS.SEM, SS.SEC
-FROM STUDENT S, SEMSECSS, CLASS C
-WHERE S.USN = C.USN AND
-SS.SSID =C.SSID AND
-SS.SEM = 4 AND
-SS.SEc=’C’;
+..............Step 4: Create an new file named ‘urls.py’ in app4
+urls.py(app4 -> Application name)...............
 
-2.
-SELECT SS.SEM, SS.SEC, S.GENDER, COUNT (S.GENDER) AS COUNT
-FROM STUDENT S, SEMSEC SS, CLASS C
-WHERES.USN = C.USN AND
-SS.SSID = C.SSID
-GROUP BY SS.SEM, SS.SEC, S.GENDER
-ORDER BY SEM;
+from django.contrib import admin
+from django.urls import path
+from . import views
+urlpatterns=[
+  path('home/',views.home,name='home' ),
+  path('about_us/',views.about_us,name='about_us'),
+  path('contact_us',views.contact_us,name='contact_us'),
+]
 
-3.
-CREATE VIEW STU_TEST1_MARKS_VIEW
-AS
-SELECT TEST1, SUBCODE
-FROM IAMARKS
-WHERE USN = '1CE16CS0
+................Step 5: Edit the file ‘urls.py’ in project.
+urls.py(programs-> Projectname).................
 
-4.
-CREATE PROCEDURE CalFA( )
--> BEGIN
--> UPDATE IAMARKS
--> SET FINALIA = (CASE WHEN GREATEST(TEST1, TEST2) != GREATEST(TEST1,TEST3)
--> THEN GREATEST(TEST1, TEST2) + GREATEST(TEST1,TEST3)
--> ELSE
--> GREATEST(TEST1, TEST2) + GREATEST(TEST2,TEST3)
--> END) / 2
--> WHERE FINALIA IS NULL;
--> END #
+from django.contrib import admin
+from django.urls import path,include
+urlpatterns = [
+  path('admin/', admin.site.urls),
+  path('',include('app4.urls')),
+]
 
-5.
-SELECT USN, SNAME, SUBCODE,FINALIA,
-(CASE WHEN FINALIA BETWEEN 17 AND 20
-THEN ‘OUTSTANDING’
-WHEN FINALIA BETWEEN 12 AND 16
-THEN ‘AVERAGE’
-ELSE ‘WEAK’
-END) AS CATEGORY
-FROM (STUDENT natural join IAMARKS) natural join SEMSEC
-WHEN SEM=8 AND SEC IN(‘A’,’B’,’C’);
+..............Step 6: Create a folder in application with name ‘templates’
+home.html(templates-> app4)...............
+
+{% extends 'layout.html' %}
+{% block title %} Home-My Website{% endblock %}
+{% block content %}
+<h1> Welcome to My Website</h1>
+<p>WELCOME TO CEC</p>
+{% endblock %}
+
+...................about_us.html(templates-> app4)...................
+
+{% extends 'layout.html' %}
+{% block title %} About Us-My Website{% endblock %}
+{% block content %}
+<h1> About Us</h1>
+<p>City Engineering College, Bangalore affiliated to Visvesvaraya Technological University.</p>
+{% endblock %}
+
+..................contact_us.html(templates -> app4)..................
+
+{% extends 'layout.html' %}
+{% block title %} Contact Us-My Website{% endblock %}
+{% block content %}
+<h1> Contact Us</h1>
+<p>Near Doddakallasandra Metro Station (next to Konana Kunte Signal/Circle Stop)
+Doddakalasandra, Bangalore – 560 062.</p>
+{% endblock %}
+
+...............layout.html(templates ->app4).................
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %} My Website{% endblock %}</title>
+</head>
+<body>
+<header>
+<nav>
+<ul>
+<li><a href={% url 'home' %}">Home</a></li>
+<li><a href={% url 'about_us' %}">About us</a></li>
+<li><a href={% url 'contact_us' %}">Contact Us</a></li>
+</ul>
+</nav>
+</header>
+<main>
+{% block content %}
+{% endblock %}
+</main>
+<footer>
+<p>&copy;{{year}} My Website. All rights reserved. Developed by CEC</p>
+</footer>
+</body>
+</html>
+
+................Step 6: Edit the settings.py for configuration in project.
+settings.py ((programs-> Projectname)....................
+
+INSTALLED_APPS = [
+'django.contrib.admin',
+'django.contrib.auth',
+'django.contrib.contenttypes',
+'django.contrib.sessions',
+'django.contrib.messages',
+'django.contrib.staticfiles',
+]
