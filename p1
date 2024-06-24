@@ -1,78 +1,49 @@
-CREATE TABLE PUBLISHER
-(NAME VARCHAR (20) PRIMARY KEY, 
-PHONE INTEGER,
-ADDRESS VARCHAR (20));
+* Step 1: Create a project with name programs
+django-admin startproject programs
 
-CREATE TABLE BOOK
-(BOOK_ID INTEGER PRIMARY KEY, 
-TITLE VARCHAR(20),
-PUB_YEAR VARCHAR(20),
-PUBLISHER_NAME VARCHAR(20),
-FOREIGN KEY(PUBLISHER_NAME) REFERENCES PUBLISHER (NAME) ON DELETE CASCADE);
+* Step2: Create an Application inside the project with name app1
+py manage.py startapp app1
 
-CREATE TABLE BOOK_AUTHORS (AUTHOR_NAME 
-VARCHAR (20),
-BOOK_ID INTEGER,
-FOREIGN KEY(BOOK_ID) REFERENCES
-BOOK(BOOK_ID) ON DELETE CASCADE, 
-PRIMARY KEY (BOOK_ID, AUTHOR_NAME));
+* Step3: Edit the views.py in Application ‘app1’
+views.py (app1)
 
-CREATE TABLE LIBRARY_PROGRAMME 
-(PROGRAMME_ID INTEGER PRIMARY KEY, 
-PROGRAMME_NAME VARCHAR(50), 
-ADDRESS VARCHAR2 (50));
+>>>from django.shortcuts import render
+from django.http import HttpResponse
+from datetime import datetime
+def current_datetime(request):
+now=datetime.now()
+html=f"<html><body><h1>CurrentDateTime:</h1><p>{now}</p></h1></body></html>"
+return HttpResponse(html)
 
-CREATE TABLE BOOK_COPIES (
-    NO_OF_COPIES INTEGER,
-    BOOK_ID INTEGER,
-    FOREIGN KEY(BOOK_ID) REFERENCES BOOK(BOOK_ID) ON DELETE CASCADE,
-    PROGRAMME_ID INTEGER,
-    FOREIGN KEY(PROGRAMME_ID) REFERENCES LIBRARY_PROGRAMME(PROGRAMME_ID) ON DELETE CASCADE,
-    PRIMARY KEY (BOOK_ID, PROGRAMME_ID)
-);
+* Step 4: Add a new file named ‘urls.py’ in app1
+urls.py(app1 -> Application name)
 
+>>>from django.http import HttpResponse
+from django.urls import path
+from . import views
+urlpatterns=[
+path('current_datetime/',views.current_datetime,name='current_datetime'),
+]
 
-CREATE TABLE CARD(CARD_NO INTEGER PRIMARY KEY);
+Step 5: Edit the file ‘urls.py’ in project.
+urls.py(programs-> Projectname)
 
-CREATE TABLE BOOK_LENDING (DATE_OUT DATE,
-DUE_DATE DATE,
-BOOK_ID INTEGER,
-FOREIGN KEY(BOOK_ID) REFERENCES BOOK (BOOK_ID) ON DELETE 
-CASCADE,
-PROGRAMME_ID INTEGER,
-FOREIGN KEY(PROGRAMME_ID) REFERENCESLIBRARY_ PROGRAMME
-(PROGRAMME _ID) ON DELETECASCADE, 
-CARD_NO INTEGER);
+>>>from django.contrib import admin
+from django.urlsimport path,include
+urlpatterns = [
+path('admin/', admin.site.urls),
+path('',include('app1.urls')),
+]
 
-1.
-SELECT B.BOOK_ID, B.TITLE, B.PUBLISHER_NAME, A.AUTHOR_NAME, 
-C.NO_OF_COPIES, L. PROGRAMME _ID
-FROM BOOK B, BOOK_AUTHORS A, BOOK_COPIES C, LIBRARY_ 
-PROGRAMME L
-WHERE B.BOOK_ID=A.BOOK_ID
-AND B.BOOK_ID=C.BOOK_ID
-AND L. PROGRAMME _ID=C. PROGRAMME _ID;
+Step 6: Edit the settings.py for configuration in project.
+settings.py ((programs-> Projectname)
 
-2.
-SELECT CARD_NO 
-FROM BOOK_LENDING
-WHERE DATE_OUT BETWEEN ’01-JAN-2017’ AND ’01-JUL-2017’ 
-GROUP BY CARD_NO
-HAVING COUNT (*)>3;
-
-3.
-DELETE FROM BOOK 
-WHERE BOOK_ID=3;
-
-4.
-CREATE VIEWV_PUBLICATION AS 
-SELECT PUB_YEAR
-FROM BOOK;
-
-5.
-CREATE VIEW V_BOOKS AS
-SELECT B.BOOK_ID, B.TITLE, C.NO_OF_COPIES 
-FROM BOOK B, BOOK_COPIES C,
-LIBRARY_ PROGRAMME L
-WHERE B.BOOK_ID=C.BOOK_ID AND
-C. PROGRAMME _ID=L.PROGRAMME _ID;
+>>>INSTALLED_APPS = [
+'django.contrib.admin',
+'django.contrib.auth',
+'django.contrib.contenttypes',
+'django.contrib.sessions',
+'django.contrib.messages',
+'django.contrib.staticfiles',
+'app1',
+]
