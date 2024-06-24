@@ -1,77 +1,108 @@
-CREATE TABLE ACTOR (
-ACT_ID NUMBER (3),
-ACT_NAME VARCHAR (20),
-ACT_GENDER CHAR (1),
-PRIMARY KEY (ACT_ID));
+PROGRAM 3.
 
-CREATE TABLE DIRECTOR (
-DIR_ID NUMBER (3),
-DIR_NAME VARCHAR (20),
-DIR_PHONE NUMBER (10),
-PRIMARY KEY (DIR_ID));
+..............Step 1: Create a project with name programs
+django-admin startproject programs............
 
-CREATE TABLE MOVIES (
-MOV_ID NUMBER (4),
-MOV_TITLE VARCHAR (25),
-MOV_YEAR NUMBER (4),
-MOV_LANG VARCHAR (12),
-DIR_ID NUMBER (3),
-PRIMARY KEY (MOV_ID),
-DIR_ID INTEGER,
-FOREIGN KEY (DIR_ID) REFERENCES DIRECTOR (DIR_ID));
+............Step2: Create an Application inside the project with name app3
+py manage.py startapp app3..........
 
-CREATE TABLE MOVIE_CAST (
-ACT_ID NUMBER (3),
-MOV_ID NUMBER (4),
-ROLE VARCHAR (10),
-PRIMARY KEY (ACT_ID, MOV_ID),
-FOREIGN KEY (ACT_ID) REFERENCES ACTOR (ACT_ID),
-FOREIGN KEY (MOV_ID) REFERENCES MOVIES (MOV_ID));
+.......Step 3: Edit the models.py file in app3
+models.py(app3 -> Application)..........
 
-CREATE TABLE RATING (
-MOV_ID NUMBER (4),
-REV_STARS VARCHAR (25),
-PRIMARY KEY (MOV_ID),
-FOREIGN KEY (MOV_ID) REFERENCES MOVIES (MOV_ID));
+from django.db import models
+class Fruit(models.Model):
+  name=models.CharField(max_length=10)
+  def __str__(self):
+    return self.name
+class Student(models.Model):
+  name=models.CharField(max_length=25)
+  event=models.CharField(max_length=25)
+  selected=models.BooleanField(default=False)
+  def __str__(self):
+    return self.name
 
-1.
-SELECT MOV_TITLE
-FROM MOVIES
-WHERE DIR_ID IN (SELECT DIR_ID
-FROM DIRECTOR
-WHERE DIR_NAME = ‘HITCHCOCK’);
+...........Step 4: admin.py(app3)..............
 
-2.
-SELECT MOV_TITLE
-FROM MOVIES M, MOVIE_CAST MV
-WHERE M.MOV_ID=MV.MOV_ID AND ACT_ID IN (SELECT ACT_ID
-FROM MOVIE_CAST GROUP BY ACT_ID
-HAVING COUNT (ACT_ID)>1)
-GROUP BY MOV_TITLE
-HAVING COUNT (*)>1;
+from django.contrib import admin
+from bhu3.models import Fruit,Student
+admin.site.register(Fruit)
+admin.site.register(Student)
 
-3.
-SELECT ACT_NAME, MOV_TITLE, MOV_YEAR
-FROM ACTOR A
-JOIN MOVIE_CAST C
-ON A.ACT_ID=C.ACT_ID
-JOIN MOVIES M
-ON C.MOV_ID=M.MOV_ID
-WHERE M.MOV_YEAR NOT BETWEEN 2000 AND 2015;
 
-4.
-SELECT MOV_TITLE, MAX (REV_STARS)
-FROM MOVIES
-INNER JOIN RATING USING (MOV_ID)
-GROUP BY MOV_TITLE
-HAVING MAX (REV_STARS)>0
-ORDER BY MOV_TITLE;
+...........Step5: Edit the views.py in Application ‘app3’
+views.py (app3).............
 
-5.
-UPDATE RATING
-SET REV_STARS=5
-WHERE MOV_ID IN (SELECT MOV_ID FROM MOVIES
-WHERE DIR_ID IN (SELECT DIR_ID
-FROM DIRECTOR
-WHERE DIR_NAME = ‘STEVEN
-SPIELBERG’));
+from django.shortcuts import render
+from django.http import HttpResponse
+from app3.models import Fruit,Student
+def fruit_list(request):
+  name=Fruit.objects.all()
+  return render(request,'fruit_list.html',{'fruits':name})
+def student_list(request):
+  name=Student.objects.filter(selected=True)
+  return render(request,'student_list.html',{'students':name})
+
+...............Step 6: Create a folder in application with name ‘templates’................
+................Step 7: Create 2 files inside the templates folder: fruit_list.html and student_list.html
+student_list.html(templates-> app3)................
+
+<!DOCTYPE html>
+<html>
+<head>
+<title> Selected students List: </title>
+</head>
+<body>
+<h1>Selected students for the event:</h1>
+<ol>{% for student in students %}
+<li>{{ student.name }}</li>
+{% endfor %}
+</ol>
+</body>
+</html>
+
+......................fruit_list.html(templates->app3).............
+<!DOCTYPE html>
+<html>
+<head>
+<title> Fruit List: </title>
+</head>
+<body>
+<h1>Available Fruits:</h1>
+<ul>{% for fruit in fruits %}
+<li>{{ fruit.name }}</li>
+{% endfor %}
+</ul>
+</body>
+</html>
+
+.................Step 8: Add a new file named ‘urls.py’ in app3
+urls.py(app3 -> Application name)................
+
+from django.urlsimport path
+from . import views
+urlpatterns = [
+  path('fruits/',views.fruit_list),
+  path('students/',views.student_list),
+]
+
+...............Step 9: Edit the file ‘urls.py’ in project.
+urls.py(programs-> Projectname)...............
+
+from django.contrib import admin
+from django.urlsimport path,include
+urlpatterns = [
+  path('admin/', admin.site.urls),
+  path(' ',include('app3.urls')),
+]
+
+...........settings.py ((programs-> Projectname)...........
+
+INSTALLED_APPS = [
+  'django.contrib.admin',
+  'django.contrib.auth',
+  'django.contrib.contenttypes',
+  'django.contrib.sessions',
+  'django.contrib.messages',
+  'django.contrib.staticfiles',
+  'app3',
+]
